@@ -10,6 +10,7 @@ PACKAGE_NAME="my_agent_python_cli-1.0.0-py3-none-any.whl"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}🚀 My Agent Python CLI Installer${NC}\n"
@@ -58,6 +59,16 @@ if ! ${PYTHON_CMD} -m pip --version &> /dev/null; then
 fi
 echo "   pip is available"
 
+# Get pip user install directory
+echo -e "\n🔍 Checking pip user install directory..."
+USER_BASE=$(${PYTHON_CMD} -m site --user-base)
+if [ "${PLATFORM}" = "Windows" ]; then
+    BIN_DIR="${USER_BASE}/Scripts"
+else
+    BIN_DIR="${USER_BASE}/bin"
+fi
+echo "   Bin directory: ${BIN_DIR}"
+
 # Create temp directory
 echo -e "\n📥 Downloading package..."
 TEMP_DIR=$(mktemp -d)
@@ -93,26 +104,52 @@ ${PYTHON_CMD} -m pip install "${TEMP_DIR}/${PACKAGE_NAME}" --user --upgrade || {
         echo -e "${RED}❌ Installation failed${NC}"
         exit 1
     }
+    BIN_DIR=""  # System install, no need to add to PATH
 }
 
 echo -e "${GREEN}   ✓ Installation complete${NC}"
 
-# Verify
+# Check if command is available
 echo -e "\n🔍 Verifying installation..."
 if command -v my-agent-py &> /dev/null; then
     echo -e "${GREEN}   ✓ Command 'my-agent-py' is available${NC}"
     my-agent-py --version
-elif ${PYTHON_CMD} -m my_agent_python_cli &> /dev/null; then
-    echo -e "${YELLOW}⚠️  Command not in PATH, but module is installed${NC}"
-    echo "   You can run: python -m my_agent_python_cli"
 else
-    echo -e "${YELLOW}⚠️  Installation succeeded but command not found${NC}"
-    echo "   Please restart your terminal or run:"
-    if [ "${PLATFORM}" = "Windows" ]; then
-        echo "   - Windows: Refresh environment variables or restart terminal"
-    else
-        echo "   - macOS/Linux: source ~/.bashrc or ~/.zshrc"
+    # Need to add to PATH
+    echo -e "${YELLOW}⚠️  Command not found in PATH${NC}"
+    
+    if [ -n "${BIN_DIR}" ]; then
+        echo -e "\n${BLUE}📝 Adding to PATH...${NC}"
+        
+        # Detect shell
+        if [ -n "$ZSH_VERSION" ] || [ "$SHELL" = "/bin/zsh" ]; then
+            SHELL_CONFIG="$HOME/.zshrc"
+        elif [ -n "$BASH_VERSION" ] || [ "$SHELL" = "/bin/bash" ]; then
+            SHELL_CONFIG="$HOME/.bashrc"
+            # On macOS, prefer .bash_profile
+            [ -f "$HOME/.bash_profile" ] && SHELL_CONFIG="$HOME/.bash_profile"
+        else
+            SHELL_CONFIG="$HOME/.profile"
+        fi
+        
+        # Check if already in PATH
+        if [[ ":$PATH:" == *":${BIN_DIR}:"* ]]; then
+            echo -e "${YELLOW}   ${BIN_DIR} is already in PATH${NC}"
+            echo -e "${YELLOW}   Please restart your terminal or run: source ${SHELL_CONFIG}${NC}"
+        else
+            # Add to shell config
+            echo -e "\n# My Agent Python CLI\nexport PATH=\"${BIN_DIR}:\$PATH\"" >> "${SHELL_CONFIG}"
+            echo -e "${GREEN}   ✓ Added ${BIN_DIR} to PATH in ${SHELL_CONFIG}${NC}"
+            echo -e "\n${YELLOW}💡 Please run the following command to use 'my-agent-py':${NC}"
+            echo -e "   ${BLUE}source ${SHELL_CONFIG}${NC}"
+            echo ""
+            echo -e "   Or restart your terminal."
+        fi
     fi
+    
+    echo ""
+    echo -e "${YELLOW}Meanwhile, you can use:${NC}"
+    echo "   ${PYTHON_CMD} -m my_agent_python_cli"
 fi
 
 echo -e "\n${GREEN}✅ My Agent Python CLI installed successfully!${NC}\n"
@@ -123,10 +160,10 @@ echo "   my-agent-py status"
 # Check if command is in PATH for Windows Git Bash
 if [ "${PLATFORM}" = "Windows" ]; then
     echo -e "\n${YELLOW}💡 Windows users:${NC}"
-    echo "   If 'my-agent-py' command is not found, try:"
+    echo "   If 'my-agent-py' command is not found after restarting, try:"
     echo "   1. Close and reopen Git Bash/Terminal"
-    echo "   2. Or run: python -m site --user-base"
-    echo "   3. Add that path + '/Scripts' to your PATH"
+    echo "   2. Add to PATH manually: ${BIN_DIR}"
+    echo "   3. Or use: python -m my_agent_python_cli"
 fi
 
 echo ""
