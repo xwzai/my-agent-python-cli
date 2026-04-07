@@ -1,0 +1,10 @@
+setup.py
+my_agent_python_cli.egg-info/PKG-INFO
+my_agent_python_cli.egg-info/SOURCES.txt
+my_agent_python_cli.egg-info/dependency_links.txt
+my_agent_python_cli.egg-info/entry_points.txt
+my_agent_python_cli.egg-info/requires.txt
+my_agent_python_cli.egg-info/top_level.txt
+src/__init__.py
+src/__main__.py
+src/cli.py

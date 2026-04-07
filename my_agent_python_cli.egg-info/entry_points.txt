@@ -1,0 +1,2 @@
+[console_scripts]
+my-agent-py = src.cli:cli

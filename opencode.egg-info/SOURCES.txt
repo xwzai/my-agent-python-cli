@@ -1,0 +1,10 @@
+setup.py
+opencode.egg-info/PKG-INFO
+opencode.egg-info/SOURCES.txt
+opencode.egg-info/dependency_links.txt
+opencode.egg-info/entry_points.txt
+opencode.egg-info/requires.txt
+opencode.egg-info/top_level.txt
+src/__init__.py
+src/__main__.py
+src/cli.py

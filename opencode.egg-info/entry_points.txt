@@ -1,0 +1,2 @@
+[console_scripts]
+opencode = src.cli:cli
