@@ -59,6 +59,13 @@ if ! ${PYTHON_CMD} -m pip --version &> /dev/null; then
 fi
 echo "   pip is available"
 
+# Uninstall existing version
+echo -e "\n🧹 Checking for existing installation..."
+if ${PYTHON_CMD} -m pip show my-agent-python-cli &> /dev/null; then
+    echo "   Found existing installation, removing..."
+    ${PYTHON_CMD} -m pip uninstall my-agent-python-cli -y || true
+fi
+
 # Get pip user install directory
 echo -e "\n🔍 Checking pip user install directory..."
 USER_BASE=$(${PYTHON_CMD} -m site --user-base)
@@ -98,9 +105,9 @@ echo -e "${GREEN}   ✓ Downloaded successfully${NC}"
 
 # Install
 echo -e "\n📦 Installing..."
-${PYTHON_CMD} -m pip install "${TEMP_DIR}/${PACKAGE_NAME}" --user --upgrade || {
+${PYTHON_CMD} -m pip install "${TEMP_DIR}/${PACKAGE_NAME}" --user --force-reinstall || {
     echo -e "\n${YELLOW}⚠️  User install failed, trying system install...${NC}"
-    ${PYTHON_CMD} -m pip install "${TEMP_DIR}/${PACKAGE_NAME}" --upgrade || {
+    ${PYTHON_CMD} -m pip install "${TEMP_DIR}/${PACKAGE_NAME}" --force-reinstall || {
         echo -e "${RED}❌ Installation failed${NC}"
         exit 1
     }
